@@ -20,20 +20,23 @@ classdef MODEL_2D_Multirotor_Tethered
             obj.vel = [1.0, 0.0];
             
             obj.l = 1.0; % Tether length
-            obj.theta = 0.0; % Tether angle
             obj.origin = [0.0, 0.0];
+            obj.theta = 0.0; % Tether angle
+
             obj.slack = true;
-            obj.tether_length = 1.0;
+            obj.tether_length = 1.2;
 
             
         end
         
         function obj = step(obj, w, thrust, dt)
             % Parse states
-            [position, attitude, velocity, l, theta, slack] = getstate(obj);
+            [position, attitude, velocity, l, ~, slack] = getstate(obj);
             
             % Calculate dynamics
-            tension_vec = [-l * cos(theta), -l * sin(theta)];
+            tether_vec = position - obj.origin;
+            theta = atan2(tether_vec(2), tether_vec(1));
+            tension_vec = tether_vec * (-l);
             
             if obj.slack
                 acc = thrust/obj.m  * [cos(attitude + pi()/2), sin(attitude + pi()/2)] + [0.0, -9.8];
@@ -42,9 +45,9 @@ classdef MODEL_2D_Multirotor_Tethered
                 q = attitude + w * dt;
             else
                 acc = thrust/obj.m  * [cos(attitude + pi()/2), sin(attitude + pi()/2)] + [0.0, -9.8];
-                acc = acc - dot(acc, tension_vec);
+                acc = acc - dot(acc, tether_vec);
                 vel = velocity + acc * dt;
-                vel = vel - dot(vel, tension_vec);
+                vel = vel - dot(vel, tether_vec);
                 pos = position + velocity * dt + 0.5*acc*dt^2;
                 pos = pos * obj.tether_length / norm(pos);
                 q = attitude + w * dt;
@@ -56,6 +59,8 @@ classdef MODEL_2D_Multirotor_Tethered
             
             if l >= obj.tether_length
                 slack = false;
+                pos = pos * obj.tether_length / norm(pos);
+
             else
                 slack = true;
             end
@@ -85,6 +90,9 @@ classdef MODEL_2D_Multirotor_Tethered
             rotor2 = position - arm_length * [cos(attitude), sin(attitude)];
             
             fuselarge = [rotor1; rotor2];
+            
+            %% Visualize vehicle
+            title('Tethered Multrirotor');
             plot(position(1), position(2), 'kx'); hold on;
             plot(fuselarge(:, 1), fuselarge(:, 2), 'k-'); hold on;
             tether = [obj.pos; obj.origin];
