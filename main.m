@@ -14,7 +14,8 @@ pos = [];
 loop = 0;
 
 % Initialize model
-model = MODEL_2D_Multirotor();
+model = MODEL_2D_Multirotor(); % Generic 2D Multirotor Model
+% model = MODEL_2D_Multirotor_Tethered(); % Tethered 2D Multirotor Model
 
 while true
    [w, thrust] = geometricCtrl2D(model, ref);
