@@ -44,8 +44,8 @@ classdef MODEL_2D_Multirotor
             rotor2 = position - arm_length * [cos(attitude), sin(attitude)];
             
             fuselarge = [rotor1; rotor2];
-            plot(position(1), position(2), 'rx'); hold on;
-            plot(fuselarge(:, 1), fuselarge(:, 2), 'r-'); 
+            plot(position(1), position(2), 'kx'); hold on;
+            plot(fuselarge(:, 1), fuselarge(:, 2), 'k-'); 
             xlim([-1.0, 1.0]); ylim([0, 2.0]); hold off;
 
         end

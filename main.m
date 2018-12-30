@@ -46,7 +46,7 @@ function [w, thrust] = geometricCtrl2D(obj, ref)
     desired_acc = Kp * error_pos + Kv * error_vel + [0.0, 9.8];
     
     %% Calculate desired angular velocity
-    tau = 1;
+    tau = 0.1;
     
     desired_att = atan2(desired_acc(2), desired_acc(1)) - 0.5 * pi();
     
