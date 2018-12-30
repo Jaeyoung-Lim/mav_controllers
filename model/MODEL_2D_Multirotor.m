@@ -8,9 +8,9 @@ classdef MODEL_2D_Multirotor
     methods
         function obj = MODEL_2D_Multirotor()
             obj.m = 1.0;
-            obj.q = 0.0;
+            obj.q = -0.8;
         
-            obj.pos = [0.0, 1.0];
+            obj.pos = [-0.5, 1.0];
             obj.vel = [1.0, 0.0];
             
         end

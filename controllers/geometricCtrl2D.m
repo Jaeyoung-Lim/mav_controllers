@@ -5,8 +5,8 @@ function [w, thrust] = geometricCtrl2D(obj, ref)
     error_vel = velocity - [0.0, 0.0];
     
     %% Calculate desired acceleration
-    Kp = -2.0;
-    Kv = -9.0;
+    Kp = -5.0;
+    Kv = -4.0;
 
     desired_acc = Kp * error_pos + Kv * error_vel + [0.0, 9.8];
     
