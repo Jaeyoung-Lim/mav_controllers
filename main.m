@@ -6,6 +6,7 @@ clc; clear all;
 pause on
 figure(1);
 dt = 0.01;
+visualize_fps = 60;
 
 ref = [0.0, 1.0];
 
@@ -22,13 +23,14 @@ while true
    model = model.step(w, thrust, dt);
    loop = loop + 1;
     pos = model.getstate();
-    if loop > 5
+     if loop * dt > 1/visualize_fps
         loop = 0;
         model.visualize();
-    end
+     end
 
     if islanded(pos)
-       break; 
+       fprintf('Vehicle crashed');
+       break;
     end
     pause(dt);
 
