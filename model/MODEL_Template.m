@@ -1,21 +1,22 @@
 classdef MODEL_Template
     properties
-        q = 0.0;
-        w = 0.0;
-        pos = [0.0, 0.0];
-        vel = [0.0, 0.0];
-        
-        thrust = 0.0;
+        pos;
     end
     methods
-        function state = step(obj)
-            [gamma_a, psi_a, phi, pos, vel, v_a] = getstate(state);
-             state = setstate(gamma_a, psi_a, phi, pos, vel, v_a);
-
-        end
-        function visualize()
+        function obj = MODEL_Template() % Constructor
+            obj.pos = 1.0;
             
         end
         
+        function obj = step()
+            % Write dynmaics here
+        end
+        
+        function [pos] = getstate(obj)            
+            % Parse state
+        end
+        function visualize(obj)
+            % Enter Visualization here
+        end
     end
 end
