@@ -8,7 +8,7 @@ figure(1);
 dt = 0.01;
 visualize_fps = 60;
 
-ref = [0.0, 1.0];
+ref = [0.0, 1.5];
 
 %%
 pos = [];

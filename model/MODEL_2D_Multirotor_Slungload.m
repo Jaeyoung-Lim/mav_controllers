@@ -4,87 +4,101 @@ classdef MODEL_2D_Multirotor_Slungload
         pos;
         vel;
         l; % Tether length
-        theta; % Tether angle
-        origin;
+        load_pos;
+        load_vel;
+        load_acc;
         slack;
         % Constants
         m;
+        m_load;
         tether_length;
     end
     methods
         function obj = MODEL_2D_Multirotor_Slungload()
             obj.m = 1.0;
+            obj.m_load = 0.1;
             obj.q = 0.0;
         
             obj.pos = [0.0, 1.0];
             obj.vel = [1.0, 0.0];
             
             obj.l = 1.0; % Tether length
-            obj.origin = [0.0, 0.0];
-            obj.theta = 0.0; % Tether angle
-
+            
+            obj.load_pos = [0.0, 1.0];
+            obj.load_vel = [-0.5, 0.5];
+            obj.load_acc = [0.0, 0.0];
+            
             obj.slack = true;
             obj.tether_length = 1.2;
-
             
         end
         
         function obj = step(obj, w, thrust, dt)
             % Parse states
-            [position, attitude, velocity, l, ~, slack] = getstate(obj);
+            [position, attitude, velocity, load_position, load_velocity, load_acceleration, slack] = getstate(obj);
+            g = [0.0, -9.8];
             
             % Calculate dynamics
-            tether_vec = position - obj.origin;
-            theta = atan2(tether_vec(2), tether_vec(1));
-            tension_vec = tether_vec * (-l);
-            
-            if obj.slack
-                acc = thrust/obj.m  * [cos(attitude + pi()/2), sin(attitude + pi()/2)] + [0.0, -9.8];
-                vel = velocity + acc * dt;
-                pos = position + velocity * dt + 0.5*acc*dt^2;
-                q = attitude + w * dt;
-            else
-                acc = thrust/obj.m  * [cos(attitude + pi()/2), sin(attitude + pi()/2)] + [0.0, -9.8];
-                acc = acc - dot(acc, tether_vec);
-                vel = velocity + acc * dt;
-                vel = vel - dot(vel, tether_vec);
-                pos = position + velocity * dt + 0.5*acc*dt^2;
-                pos = pos * obj.tether_length / norm(pos);
-                q = attitude + w * dt;
-
-            end
-            
-            theta = atan2(-tension_vec(2), -tension_vec(1));
-            l = norm(pos - obj.origin);
-            
-            if l >= obj.tether_length
+            tether_vec = load_position - position;
+            if norm(tether_vec) >= obj.l
+                % Thether is taut
+                T = obj.m_load * norm(-g + load_acceleration) * tether_vec / norm(tether_vec);
                 slack = false;
-                pos = pos * obj.tether_length / norm(pos);
+                
+                % Quadrotor dynamics
+                acc = thrust/obj.m  * [cos(attitude + pi()/2), sin(attitude + pi()/2)] + g + T/obj.m;
+                velocity1 = velocity + acc * dt;
+                position = position + velocity * dt + 0.5*acc*dt^2;
+                attitude = attitude + w * dt;
 
+                % Load dynamics
+                load_acceleration = g - T / obj.m_load;
+                load_velocity1 = load_velocity + load_acceleration * dt;
+                load_position = load_position + load_velocity * dt + 0.5 * load_acceleration * dt^2;
+
+                load_direction = (load_position - position) / norm(load_position - position);
+                load_position = position + load_direction * obj.l;
             else
+                % Thether is slack
+                T = [0.0, 0.0];
                 slack = true;
+
+                % Quadrotor dynamics
+                acc = thrust/obj.m  * [cos(attitude + pi()/2), sin(attitude + pi()/2)] + g;
+                velocity1 = velocity + acc * dt;
+                position = position + velocity * dt + 0.5*acc*dt^2;
+                attitude = attitude + w * dt;
+
+                % Load dynamics
+                load_acceleration = g;
+                load_velocity1 = load_velocity + load_acceleration * dt;
+                load_position = load_position + load_velocity * dt + 0.5 * load_acceleration * dt^2;
+
             end
             
             % Encode states
-            obj.pos = pos;
-            obj.q = q;
-            obj.vel = vel;
-            obj.l = l;
-            obj.theta = theta;
+            obj.pos = position;
+            obj.q = attitude;
+            obj.vel = velocity1;
+            obj.load_pos = load_position;
+            obj.load_vel = load_velocity1;
+            obj.load_acc = load_acceleration;
+%             obj.l = l;
             obj.slack = slack;
         end
         
-        function [pos, q, vel, l, theta, slack] = getstate(obj)
+        function [pos, q, vel, load_pos, load_vel, load_acc, slack] = getstate(obj)
             pos = obj.pos;
             q = obj.q;
             vel = obj.vel;
-            l = obj.l;
-            theta = obj.theta;
+            load_pos = obj.load_pos;
+            load_vel = obj.load_vel;
+            load_acc = obj.load_acc;
             slack = obj.slack;
             
         end
         function visualize(obj)
-            [position, attitude, ~] = getstate(obj);
+            [position, attitude, velocity, load_position, load_velocity, load_acceleration, slack] = getstate(obj);
             arm_length = 0.5;
             rotor1 = position + arm_length * [cos(attitude), sin(attitude)];
             rotor2 = position - arm_length * [cos(attitude), sin(attitude)];
@@ -95,10 +109,11 @@ classdef MODEL_2D_Multirotor_Slungload
             title('Tethered Multrirotor');
             plot(position(1), position(2), 'kx'); hold on;
             plot(fuselarge(:, 1), fuselarge(:, 2), 'k-'); hold on;
-            tether = [obj.pos; obj.origin];
+            tether = [obj.pos; obj.load_pos];
             plot(tether(:, 1), tether(:, 2), 'k-'); hold on;
+            plot(obj.load_pos(1), obj.load_pos(2), 'ko-');
             
-            xlim([-1.0, 1.0]); ylim([0, 2.0]); hold off;
+            xlim([-1.0, 1.0]); ylim([0.0, 2.0]); hold off;
 
         end
     end
