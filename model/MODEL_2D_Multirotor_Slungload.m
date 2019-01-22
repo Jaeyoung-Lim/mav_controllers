@@ -7,7 +7,7 @@ classdef MODEL_2D_Multirotor_Slungload
         load_pos;
         load_vel;
         load_acc;
-        thrust
+        thrust;
         slack;
         % Constants
         m;
@@ -64,7 +64,7 @@ classdef MODEL_2D_Multirotor_Slungload
                 % Enforce kinematic constraints
                 load_direction = (load_position - position) / norm(load_position - position);
                 load_position = position + load_direction * obj.l;
-                load_velocity1 = load_velocity - dot(load_velocity1 - velocity1, load_direction) * load_direction
+                load_velocity1 = load_velocity - dot(load_velocity1 - velocity1, load_direction) * load_direction;
 
 
             else
