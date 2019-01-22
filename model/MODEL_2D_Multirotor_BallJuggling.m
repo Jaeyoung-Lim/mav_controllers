@@ -41,8 +41,9 @@ classdef MODEL_2D_Multirotor_BallJuggling
             F = [0.0, 0.0];
             
             if iscollision(position, attitude, load_position, obj.quad_width, obj.radius)
-                F = obj.m * obj.m_ball*(1 + obj.e) * (velocity - load_velocity)/(dt* (obj.m + obj.m_ball));
-               
+                if dot(load_velocity, velocity) < 0
+                    F = 1.1*obj.m * obj.m_ball*(1 + obj.e) * (velocity - load_velocity)/(dt* (obj.m + obj.m_ball));
+                end
             end
 
             % Load dynamics
