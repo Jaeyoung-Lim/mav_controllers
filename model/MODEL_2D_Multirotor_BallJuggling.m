@@ -8,48 +8,45 @@ classdef MODEL_2D_Multirotor_BallJuggling
         load_vel;
         load_acc;
         thrust;
-        slack;
         % Constants
         m;
-        m_load;
-        tether_length;
+        m_ball;
+        quad_width;
+        radius;
+        e; % Restitution
     end
     methods
         function obj = MODEL_2D_Multirotor_BallJuggling()
             obj.m = 1.0;
-            obj.m_load = 0.1;
+            obj.m_ball = 0.1;
             obj.q = 0.0;
         
             obj.pos = [0.0, 1.0];
-            obj.vel = [1.0, 0.0];
-            
-            obj.l = 0.6; % Tether length
-            
+            obj.vel = [1.0, 0.0];            
             obj.load_pos = [0.0, 1.5];
             obj.load_vel = [0.5, 0.5];
             obj.load_acc = [0.0, 0.0];
             obj.thrust = 0.0;
             
-            obj.slack = true;
-            obj.tether_length = 1.2;
-            
+            obj.quad_width = 0.5;
+            obj.radius = 0.01;
+            obj.e = 1.0;
         end
         
         function obj = step(obj, w, thrust, dt)
             % Parse states
-            [position, attitude, velocity, load_position, load_velocity, load_acceleration, ~, slack] = getstate(obj);
+            [position, attitude, velocity, load_position, load_velocity, load_acceleration, ~] = getstate(obj);
             g = [0.0, -9.8];
             
-            % Calculate dynamics
-            tether_vec = load_position - position;
-            unit_tether_vec = tether_vec / norm(tether_vec);
+            F = [0.0, 0.0];
             
-            % Thether is slack
-            T = [0.0, 0.0];
-            slack = true;
+            if iscollision(position, attitude, load_position, obj.quad_width, obj.radius)
+                F = obj.m * obj.m_ball*(1 + obj.e) * (velocity - load_velocity)/(dt* (obj.m + obj.m_ball));
+               
+            end
 
             % Load dynamics
-            load_acceleration = g;
+            load_acceleration = g + F/obj.m_ball;
             load_velocity1 = load_velocity + load_acceleration * dt;
             load_position = load_position + load_velocity * dt + 0.5 * load_acceleration * dt^2;
 
@@ -67,10 +64,9 @@ classdef MODEL_2D_Multirotor_BallJuggling
             obj.load_pos = load_position;
             obj.load_vel = load_velocity1;
             obj.load_acc = load_acceleration;
-            obj.slack = slack;
-        end
-        
-        function [pos, q, vel, load_pos, load_vel, load_acc, thrust, slack] = getstate(obj)
+            
+        end        
+        function [pos, q, vel, load_pos, load_vel, load_acc, thrust] = getstate(obj)
             thrust = obj.thrust;
             pos = obj.pos;
             q = obj.q;
@@ -78,7 +74,6 @@ classdef MODEL_2D_Multirotor_BallJuggling
             load_pos = obj.load_pos;
             load_vel = obj.load_vel;
             load_acc = obj.load_acc;
-            slack = obj.slack;
             
         end
         function visualize(obj)

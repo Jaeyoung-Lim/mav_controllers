@@ -17,7 +17,8 @@ loop = 0;
 % Initialize model
 % model = MODEL_2D_Multirotor(); % Generic 2D Multirotor Model
 % model = MODEL_2D_Multirotor_Tethered(); % Tethered 2D Multirotor Model
-model = MODEL_2D_Multirotor_Slungload(); % Slungload 2D Multirotor Model
+% model = MODEL_2D_Multirotor_Slungload(); % Slungload 2D Multirotor Model
+model = MODEL_2D_Multirotor_BallJuggling(); % Slungload 2D Multirotor Model
 
 
 while true
